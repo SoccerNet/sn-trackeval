@@ -184,6 +184,8 @@ class Evaluator:
                             if config['OUTPUT_DETAILED']:
                                 utils.write_detailed_results(details, c_cls, output_fol)
 
+                            res['SUMMARIES'] = summaries
+
                     # Output for returning from function
                     output_res[dataset_name][tracker] = res
                     output_msg[dataset_name][tracker] = 'Success'
