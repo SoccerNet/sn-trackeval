@@ -152,6 +152,7 @@ class Evaluator:
                         print('\nAll sequences for %s finished in %.2f seconds' % (tracker, time.time() - time_start))
                     output_fol = dataset.get_output_fol(tracker)
                     tracker_display_name = dataset.get_display_name(tracker)
+                    res['SUMMARIES'] = {}
                     for c_cls in res['COMBINED_SEQ'].keys():  # class_list + combined classes if calculated
                         summaries = {}
                         details = []
