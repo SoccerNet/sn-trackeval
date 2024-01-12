@@ -164,7 +164,7 @@ class Evaluator:
                                     table_res = {'COMBINED_SEQ': res['COMBINED_SEQ'][c_cls][metric_name]}
                                 else:
                                     table_res = {seq_key: seq_value[c_cls][metric_name] for seq_key, seq_value
-                                                 in res.items()}
+                                                 in res.items() if seq_key != 'SUMMARIES'}
 
                                 if config['PRINT_RESULTS'] and config['PRINT_ONLY_COMBINED']:
                                     dont_print = dataset.should_classes_combine and c_cls not in combined_cls_keys
