@@ -440,12 +440,6 @@ class SoccerNetGS(_BaseDataset):
             similarity_scores.append(ious)
         raw_data['similarity_scores'] = similarity_scores
 
-        # Calculate the average, min, and max values
-        avg_similarity_score = np.mean(self.all_similarity_scores)
-        min_similarity_score = np.min(self.all_similarity_scores)
-        max_similarity_score = np.max(self.all_similarity_scores)
-        print(f"Similarity scores: avg={avg_similarity_score}, min={min_similarity_score}, max={max_similarity_score}")
-
         return raw_data
 
     def _calculate_similarities(self, gt_dets_t, tracker_dets_t):
