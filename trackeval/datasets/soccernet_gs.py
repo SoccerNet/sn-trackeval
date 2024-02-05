@@ -64,7 +64,7 @@ class SoccerNetGS(_BaseDataset):
             track_split_fol = ''
         self.gt_fol = os.path.join(self.config['GT_FOLDER'], gt_split_fol)
         self.tracker_fol = os.path.join(self.config['TRACKERS_FOLDER'], track_split_fol)
-        self.seq_list, self.seq_lengths = self._get_seq_info()  # FIXME seq_lengths useless
+        self.seq_list = self._get_seq_info()
         self.eval_mode = self.config['EVAL_MODE']
         self.eval_space = self.config['EVAL_SPACE']
         self.eval_sim_metric = self.config['EVAL_SIMILARITY_METRIC']
@@ -151,23 +151,24 @@ class SoccerNetGS(_BaseDataset):
             seq_list = list(self.config["SEQ_INFO"].keys())
             seq_lengths = self.config["SEQ_INFO"]
         else:
-            if self.config["SEQMAP_FILE"]:
-                seqmap_file = self.config["SEQMAP_FILE"][0] if isinstance(self.config["SEQMAP_FILE"], list) else self.config["SEQMAP_FILE"]
+            if self.config["SEQMAP_FILE"] is None and self.config["SEQMAP_FOLDER"] is None:
+                seqmap_folder = os.path.join(self.config['GT_FOLDER'], self.config['SPLIT_TO_EVAL'])
+                seq_list = [seq for seq in os.listdir(seqmap_folder) if os.path.isdir(os.path.join(seqmap_folder, seq))]
             else:
-                if self.config["SEQMAP_FOLDER"] is None:
-                    seqmap_file = os.path.join(self.config['GT_FOLDER'], self.config['SPLIT_TO_EVAL'], 'seq_info.json')
+                if self.config["SEQMAP_FILE"]:
+                    seqmap_file = self.config["SEQMAP_FILE"][0] if isinstance(self.config["SEQMAP_FILE"], list) else self.config["SEQMAP_FILE"]
                 else:
                     seqmap_file = os.path.join(self.config["SEQMAP_FOLDER"], self.config['SPLIT_TO_EVAL'], 'seq_info.json')
 
-            if not os.path.isfile(seqmap_file):
-                print('no seqmap found: ' + seqmap_file)
-                raise TrackEvalException('no seqmap found: ' + os.path.basename(seqmap_file))
-            with open(seqmap_file, 'r') as f:
-                data = json.load(f)
+                if not os.path.isfile(seqmap_file):
+                    print('no seqmap found: ' + seqmap_file)
+                    raise TrackEvalException('no seqmap found: ' + os.path.basename(seqmap_file))
+                with open(seqmap_file, 'r') as f:
+                    data = json.load(f)
 
-            seq_list = [seq["name"] for seq in data]
-            seq_lengths = {seq["name"]: seq["nframes"] for seq in data}
-        return seq_list, seq_lengths
+                seq_list = [seq["name"] for seq in data]
+                seq_lengths = {seq["name"]: seq["nframes"] for seq in data}  # useless because computed later by reading the annotation file
+        return seq_list
 
     def _load_raw_file(self, tracker, seq, is_gt):
         """Load a file (gt or tracker) in the MOT Challenge 2D box format
