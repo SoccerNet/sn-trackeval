@@ -18,7 +18,7 @@ class SoccerNetGS(_BaseDataset):
             'TRACKERS_FOLDER': os.path.join(code_path, 'data/trackers/SoccerNetGS/'),  # Trackers location
             'OUTPUT_FOLDER': None,  # Where to save eval results (if None, same as TRACKERS_FOLDER)
             'TRACKERS_TO_EVAL': None,  # Filenames of trackers to eval (if None, all in folder)
-            'SPLIT_TO_EVAL': 'validation',  # Valid: 'train', 'val', 'test', 'challenge'
+            'SPLIT_TO_EVAL': 'valid',  # Valid: 'train', 'val', 'test', 'challenge'
             'EVAL_MODE': 'distance',  # Valid: 'distance' or 'classes'
             'EVAL_SPACE': 'pitch',  # Valid: 'image', 'pitch'
             'EVAL_SIMILARITY_METRIC': 'gaussian',  # Valid: 'iou', 'eucl', 'gaussian'
@@ -277,12 +277,18 @@ class SoccerNetGS(_BaseDataset):
 
         # Convert lists to numpy arrays
         for t in range(num_timesteps):
-            if ids[t] is not None:
-                ids[t] = np.array(ids[t])
-                classes[t] = np.array(classes[t])
-                dets[t] = np.array(dets[t])
-                crowd_ignore_regions[t] = np.array(crowd_ignore_regions[t])
-                confidences[t] = np.array(confidences[t])
+            if ids[t] is None:
+                ids[t] = np.empty(0).astype(int)
+                classes[t] = np.empty(0).astype(int)
+                dets[t] = np.empty((0, 4))
+                crowd_ignore_regions[t] = np.empty((0, 4))
+                confidences[t] = np.empty(0)
+                extras[t] = []
+            ids[t] = np.array(ids[t])
+            classes[t] = np.array(classes[t])
+            dets[t] = np.array(dets[t])
+            crowd_ignore_regions[t] = np.array(crowd_ignore_regions[t])
+            confidences[t] = np.array(confidences[t])
 
         if is_gt:
             raw_data = {
