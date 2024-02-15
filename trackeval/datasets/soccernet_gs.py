@@ -23,6 +23,9 @@ class SoccerNetGS(_BaseDataset):
             'EVAL_SPACE': 'pitch',  # Valid: 'image', 'pitch'
             'EVAL_SIMILARITY_METRIC': 'gaussian',  # Valid: 'iou', 'eucl', 'gaussian'
             'EVAL_SIGMA': 2.5,  # Sigma parameter for the gaussian similarity metric.
+            'USE_JERSEY_NUMBERS': True,  # Take jersey numbers into account for evaluation
+            'USE_TEAMS': True,  # Take team into account for evaluation
+            'USE_ROLES': True,  # Take role into account for evaluation
             'IGNORE_BALL': True,  # Ignore ball for evaluation, currently ball evaluation is not supported
             'INPUT_AS_ZIP': False,  # Whether tracker input files are zipped
             'PRINT_CONFIG': True,  # Whether to print current config
@@ -70,10 +73,13 @@ class SoccerNetGS(_BaseDataset):
         self.eval_sim_metric = self.config['EVAL_SIMILARITY_METRIC']
         self.eval_sigma = self.config['EVAL_SIGMA']
         self.ignore_ball = self.config['IGNORE_BALL']
+        self.use_jersey_numbers = self.config['USE_JERSEY_NUMBERS']
+        self.use_teams = self.config['USE_TEAMS']
+        self.use_roles = self.config['USE_ROLES']
         self.all_similarity_scores = []
         self.all_classes = {}
         if self.eval_mode == 'classes':
-            self.all_classes = extract_all_classes(self.config, self.gt_fol, self.seq_list)
+            self.all_classes = self.extract_all_classes(self.config, self.gt_fol, self.seq_list)
             self.class_name_to_class_id = {clazz["name"]: clazz["id"] for clazz in self.all_classes.values()}
         else:
             self.class_name_to_class_id = {
@@ -266,7 +272,7 @@ class SoccerNetGS(_BaseDataset):
             })
 
             if self.eval_mode == 'classes':
-                class_name = attributes_to_class_name(role, team, jersey_number)
+                class_name = self.attributes_to_class_name(role, team, jersey_number)
                 class_id = self.class_name_to_class_id[class_name]
                 # class_id = self.class_name_to_class_id[class_name] if class_name in self.class_name_to_class_id else -1
                 classes[timestep].append(class_id)
@@ -440,7 +446,7 @@ class SoccerNetGS(_BaseDataset):
             if self.eval_mode == 'distance':
                 # Set similarity score to 0 if attributes do not match
                 for i, (gt_extra, tracker_extra) in enumerate(zip(gt_extras_t, tracker_extras_t)):
-                    if attributes_to_class_name(gt_extra['role'], gt_extra['team'], gt_extra['jersey']) != attributes_to_class_name(tracker_extra['role'], tracker_extra['team'], tracker_extra['jersey']):
+                    if self.attributes_to_class_name(gt_extra['role'], gt_extra['team'], gt_extra['jersey']) != self.attributes_to_class_name(tracker_extra['role'], tracker_extra['team'], tracker_extra['jersey']):
                         ious[i] = 0
 
             similarity_scores.append(ious)
@@ -512,22 +518,49 @@ class SoccerNetGS(_BaseDataset):
         return normalized_distance
 
 
-def attributes_to_class_name(role, team, jersey_number):
-    # if role == "goalkeeper":
-    if "goalkeeper" in role:
-        role = "goalkeeper"  # some are tagged as "goalkeepersS"
-        category = f"{role}_{team}_{jersey_number}" if jersey_number is not None else f"{role}_{team}"
-    elif role == "player":
-        category = f"{role}_{team}_{jersey_number}" if jersey_number is not None else f"{role}_{team}"
-    elif role == "referee":
-        category = f"{role}"
-    elif role == "ball":
-        category = f"{role}"
-    elif role == "other":
-        category = f"{role}"
-    else:
-        category = f"unknown_{role}"
-    return category
+    def attributes_to_class_name(self, role, team, jersey_number):
+        if not self.use_jersey_numbers:
+            jersey_number = None
+        if not self.use_teams:
+            team = None
+        if not self.use_roles:
+            role = "player"  # ignore the role but still uses team or jn
+
+        if "goalkeeper" in role:
+            role = "goalkeeper"  # some are tagged as "goalkeepersS"
+
+        if role == "goalkeeper" or role == "player":
+            if jersey_number is not None:
+                category = f"{role}_{team}_{jersey_number}"
+            else:
+                category = f"{role}_{team}"
+        else:
+            category = f"{role}"
+        return category
+
+    def extract_all_classes(self, config, gt_fol, seq_list):
+        all_classes = {}
+        for seq in seq_list:
+            # File location
+            file = config["GT_LOC_FORMAT"].format(gt_folder=gt_fol, seq=seq)
+
+            with open(file, 'r') as f:
+                data = json.load(f)
+
+            for annotation in data["annotations"]:
+                if annotation["supercategory"] != "object":  # ignore pitch and camera
+                    continue
+                role = annotation["attributes"]["role"]
+                jersey_number = annotation["attributes"]["jersey"]
+                team = annotation["attributes"]["team"]
+                class_name = self.attributes_to_class_name(role, team, jersey_number)
+                if class_name not in all_classes:
+                    all_classes[class_name] = {
+                        "id": len(all_classes) + 1,
+                        "name": class_name,
+                        "supercategory": "object"
+                    }
+        return all_classes
 
 
 def bbox_image_bottom_projection_to_bbox_pitch(dets):
@@ -550,28 +583,3 @@ def bbox_image_bottom_projection_to_bbox_pitch(dets):
     transformed_dets = np.stack((x_bottom_middle, y_bottom_middle, bbox_width_height, bbox_width_height), axis=-1)
 
     return transformed_dets
-
-
-def extract_all_classes(config, gt_fol, seq_list):
-    all_classes = {}
-    for seq in seq_list:
-        # File location
-        file = config["GT_LOC_FORMAT"].format(gt_folder=gt_fol, seq=seq)
-
-        with open(file, 'r') as f:
-            data = json.load(f)
-
-        for annotation in data["annotations"]:
-            if annotation["supercategory"] != "object":  # ignore pitch and camera
-                continue
-            role = annotation["attributes"]["role"]
-            jersey_number = annotation["attributes"]["jersey"]
-            team = annotation["attributes"]["team"]
-            class_name = attributes_to_class_name(role, team, jersey_number)
-            if class_name not in all_classes:
-                all_classes[class_name] = {
-                    "id": len(all_classes) + 1,
-                    "name": class_name,
-                    "supercategory": "object"
-                }
-    return all_classes
