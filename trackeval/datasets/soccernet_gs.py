@@ -444,10 +444,12 @@ class SoccerNetGS(_BaseDataset):
             ious = self._calculate_similarities(gt_dets_t, tracker_dets_t)
 
             if self.eval_mode == 'distance':
-                # Set similarity score to 0 if attributes do not match
-                for i, (gt_extra, tracker_extra) in enumerate(zip(gt_extras_t, tracker_extras_t)):
-                    if self.attributes_to_class_name(gt_extra['role'], gt_extra['team'], gt_extra['jersey']) != self.attributes_to_class_name(tracker_extra['role'], tracker_extra['team'], tracker_extra['jersey']):
-                        ious[i] = 0
+                for i, gt_extra in enumerate(gt_extras_t):
+                    for j, tracker_extra in enumerate(tracker_extras_t):
+                        if self.attributes_to_class_name(gt_extra['role'], gt_extra['team'], gt_extra['jersey']) != \
+                                self.attributes_to_class_name(tracker_extra['role'], tracker_extra['team'],
+                                                              tracker_extra['jersey']):
+                            ious[i, j] = 0
 
             similarity_scores.append(ious)
         raw_data['similarity_scores'] = similarity_scores
