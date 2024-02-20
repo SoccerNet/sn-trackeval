@@ -23,9 +23,9 @@ class SoccerNetGS(_BaseDataset):
             'EVAL_SPACE': 'pitch',  # Valid: 'image', 'pitch'
             'EVAL_SIMILARITY_METRIC': 'gaussian',  # Valid: 'iou', 'eucl', 'gaussian'
             'EVAL_SIGMA': 2.5,  # Sigma parameter for the gaussian similarity metric.
-            'USE_JERSEY_NUMBERS': True,  # Take jersey numbers into account for evaluation
-            'USE_TEAMS': True,  # Take team into account for evaluation
             'USE_ROLES': True,  # Take role into account for evaluation
+            'USE_TEAMS': True,  # Take team into account for evaluation
+            'USE_JERSEY_NUMBERS': True,  # Take jersey numbers into account for evaluation
             'IGNORE_BALL': True,  # Ignore ball for evaluation, currently ball evaluation is not supported
             'INPUT_AS_ZIP': False,  # Whether tracker input files are zipped
             'PRINT_CONFIG': True,  # Whether to print current config
@@ -260,13 +260,22 @@ class SoccerNetGS(_BaseDataset):
 
             # Extract extra information if needed (modify this part based on your requirements)
             role = annotation["attributes"]["role"]
-            jersey_number = annotation["attributes"]["jersey"]
             team = annotation["attributes"]["team"]
+            jersey_number = annotation["attributes"]["jersey"]
+            # Preprocessing: put jersey number and team to none if the role is not a player or goalkeeper, so that they are ignored for similarity calculation in 'get_raw_seq_data'
+            role = role if self.use_roles else None
+            # if role are disabled, use team without preprocessing. Team should be set to "None" (null in the json) if the detection is not a player nor a goalkeeper
+            team = team if (self.use_teams and self.use_roles and role in {"player", "goalkeeper"}) or (self.use_teams and not self.use_roles) else None
+            # if role are disabled, use jersey number without preprocessing. Jersey Numbers should be set to "None" (null in the json) if the detection is not a player nor a goalkeeper
+            jersey_number = jersey_number if (self.use_jersey_numbers and self.use_roles and role in {"player", "goalkeeper"}) or (self.use_jersey_numbers and not self.use_roles) else None
+            assert role is None or role in {"other", "player", "goalkeeper", "referee"}
+            assert team is None or team in {"left", "right", 'nan'}
+            assert jersey_number is None or 0 <= int(jersey_number) <= 10000
             category_id = annotation["category_id"]
             extras[timestep].append({
                 "role": role,
-                "jersey": jersey_number,
                 "team": team,
+                "jersey": jersey_number,
                 "category_id": category_id,
                 # Add more fields as needed
             })
@@ -444,12 +453,69 @@ class SoccerNetGS(_BaseDataset):
             ious = self._calculate_similarities(gt_dets_t, tracker_dets_t)
 
             if self.eval_mode == 'distance':
-                for i, gt_extra in enumerate(gt_extras_t):
-                    for j, tracker_extra in enumerate(tracker_extras_t):
-                        if self.attributes_to_class_name(gt_extra['role'], gt_extra['team'], gt_extra['jersey']) != \
-                                self.attributes_to_class_name(tracker_extra['role'], tracker_extra['team'],
-                                                              tracker_extra['jersey']):
-                            ious[i, j] = 0
+                # give 0 similarity when the attributes do not match
+                gt_roles = np.array([gt_extra['role'] for gt_extra in gt_extras_t])
+                gt_teams = np.array([gt_extra['team'] for gt_extra in gt_extras_t])
+                gt_jerseys = np.array([gt_extra['jersey'] for gt_extra in gt_extras_t])
+                tracker_roles = np.array([tracker_extra['role'] for tracker_extra in tracker_extras_t])
+                tracker_teams = np.array([tracker_extra['team'] for tracker_extra in tracker_extras_t])
+                tracker_jerseys = np.array([tracker_extra['jersey'] for tracker_extra in tracker_extras_t])
+
+                # Ensure dimensions are compatible for broadcasting by adding an extra dimension to `gt` arrays
+                gt_roles = gt_roles[:, np.newaxis]
+                gt_teams = gt_teams[:, np.newaxis]
+                gt_jerseys = gt_jerseys[:, np.newaxis]
+
+                # Comparisons (True where conditions are met)
+                matches = (gt_roles == tracker_roles) & (gt_teams == tracker_teams) & (gt_jerseys == tracker_jerseys)
+
+                # Since we want to set `ious` to 0 where conditions are NOT met, invert the match matrix
+                non_matches = ~matches
+
+                ious[non_matches] = 0
+
+            # if self.eval_mode == 'distance':
+                # ious_copy2 = np.copy(ious)
+                # for i, gt_extra in enumerate(gt_extras_t):
+                #     for j, tracker_extra in enumerate(tracker_extras_t):
+                #         gr = gt_extra['role']
+                #         gt = gt_extra['team']
+                #         gj = gt_extra['jersey']
+                #         tr = tracker_extra['role']
+                #         tt = tracker_extra['team']
+                #         tj = tracker_extra['jersey']
+                #         flag1 = self.attributes_to_class_name(gr, gt, gj) == self.attributes_to_class_name(tr, tt, tj)
+                #         if not flag1:
+                #             ious_copy2[i, j] = 0
+                #         flag2 = self.equal_attributes(gr, tr, gt, tt, gj, tj)
+                #         if not flag2:
+                #             ious[i, j] = 0
+                #
+                #         assert flag1 == flag2
+                #
+                # ious_copy = np.copy(ious)
+                # gt_roles = np.array([gt_extra['role'] for gt_extra in gt_extras_t])
+                # gt_teams = np.array([gt_extra['team'] for gt_extra in gt_extras_t])
+                # gt_jerseys = np.array([gt_extra['jersey'] for gt_extra in gt_extras_t])
+                # tracker_roles = np.array([tracker_extra['role'] for tracker_extra in tracker_extras_t])
+                # tracker_teams = np.array([tracker_extra['team'] for tracker_extra in tracker_extras_t])
+                # tracker_jerseys = np.array([tracker_extra['jersey'] for tracker_extra in tracker_extras_t])
+                #
+                # # Ensure dimensions are compatible for broadcasting by adding an extra dimension to `gt` arrays
+                # gt_roles = gt_roles[:, np.newaxis]
+                # gt_teams = gt_teams[:, np.newaxis]
+                # gt_jerseys = gt_jerseys[:, np.newaxis]
+                #
+                # # Comparisons (True where conditions are met)
+                # matches = (gt_roles == tracker_roles) & (gt_teams == tracker_teams) & (gt_jerseys == tracker_jerseys)
+                #
+                # # Since we want to set `ious` to 0 where conditions are NOT met, invert the match matrix
+                # non_matches = ~matches
+                #
+                # ious_copy[non_matches] = 0
+                # # ious[non_matches] = 0
+                #
+                # assert np.all(ious_copy == ious)
 
             similarity_scores.append(ious)
         raw_data['similarity_scores'] = similarity_scores
