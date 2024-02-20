@@ -19,7 +19,7 @@ class SoccerNetGS(_BaseDataset):
             'OUTPUT_FOLDER': None,  # Where to save eval results (if None, same as TRACKERS_FOLDER)
             'TRACKERS_TO_EVAL': None,  # Filenames of trackers to eval (if None, all in folder)
             'SPLIT_TO_EVAL': 'valid',  # Valid: 'train', 'val', 'test', 'challenge'
-            'EVAL_MODE': 'distance',  # Valid: 'distance' or 'classes'
+            'EVAL_MODE': 'distance',  # Valid: 'distance' or 'classes': both are equivalent, classes is much slower.
             'EVAL_SPACE': 'pitch',  # Valid: 'image', 'pitch'
             'EVAL_SIMILARITY_METRIC': 'gaussian',  # Valid: 'iou', 'eucl', 'gaussian'
             'EVAL_SIGMA': 2.5,  # Sigma parameter for the gaussian similarity metric.
@@ -81,6 +81,8 @@ class SoccerNetGS(_BaseDataset):
         if self.eval_mode == 'classes':
             self.all_classes = self.extract_all_classes(self.config, self.gt_fol, self.seq_list)
             self.class_name_to_class_id = {clazz["name"]: clazz["id"] for clazz in self.all_classes.values()}
+            assert 0 not in self.class_name_to_class_id
+            self.class_name_to_class_id["distractor"] = 0
         else:
             self.class_name_to_class_id = {
                 "person": 1,
@@ -282,7 +284,7 @@ class SoccerNetGS(_BaseDataset):
 
             if self.eval_mode == 'classes':
                 class_name = self.attributes_to_class_name(role, team, jersey_number)
-                class_id = self.class_name_to_class_id[class_name]
+                class_id = self.class_name_to_class_id[class_name] if class_name in self.class_name_to_class_id else 0
                 # class_id = self.class_name_to_class_id[class_name] if class_name in self.class_name_to_class_id else -1
                 classes[timestep].append(class_id)
             else:
