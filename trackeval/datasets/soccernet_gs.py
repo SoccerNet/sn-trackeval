@@ -474,49 +474,6 @@ class SoccerNetGS(_BaseDataset):
 
                 ious[non_matches] = 0
 
-            # if self.eval_mode == 'distance':
-                # ious_copy2 = np.copy(ious)
-                # for i, gt_extra in enumerate(gt_extras_t):
-                #     for j, tracker_extra in enumerate(tracker_extras_t):
-                #         gr = gt_extra['role']
-                #         gt = gt_extra['team']
-                #         gj = gt_extra['jersey']
-                #         tr = tracker_extra['role']
-                #         tt = tracker_extra['team']
-                #         tj = tracker_extra['jersey']
-                #         flag1 = self.attributes_to_class_name(gr, gt, gj) == self.attributes_to_class_name(tr, tt, tj)
-                #         if not flag1:
-                #             ious_copy2[i, j] = 0
-                #         flag2 = self.equal_attributes(gr, tr, gt, tt, gj, tj)
-                #         if not flag2:
-                #             ious[i, j] = 0
-                #
-                #         assert flag1 == flag2
-                #
-                # ious_copy = np.copy(ious)
-                # gt_roles = np.array([gt_extra['role'] for gt_extra in gt_extras_t])
-                # gt_teams = np.array([gt_extra['team'] for gt_extra in gt_extras_t])
-                # gt_jerseys = np.array([gt_extra['jersey'] for gt_extra in gt_extras_t])
-                # tracker_roles = np.array([tracker_extra['role'] for tracker_extra in tracker_extras_t])
-                # tracker_teams = np.array([tracker_extra['team'] for tracker_extra in tracker_extras_t])
-                # tracker_jerseys = np.array([tracker_extra['jersey'] for tracker_extra in tracker_extras_t])
-                #
-                # # Ensure dimensions are compatible for broadcasting by adding an extra dimension to `gt` arrays
-                # gt_roles = gt_roles[:, np.newaxis]
-                # gt_teams = gt_teams[:, np.newaxis]
-                # gt_jerseys = gt_jerseys[:, np.newaxis]
-                #
-                # # Comparisons (True where conditions are met)
-                # matches = (gt_roles == tracker_roles) & (gt_teams == tracker_teams) & (gt_jerseys == tracker_jerseys)
-                #
-                # # Since we want to set `ious` to 0 where conditions are NOT met, invert the match matrix
-                # non_matches = ~matches
-                #
-                # ious_copy[non_matches] = 0
-                # # ious[non_matches] = 0
-                #
-                # assert np.all(ious_copy == ious)
-
             similarity_scores.append(ious)
         raw_data['similarity_scores'] = similarity_scores
 
