@@ -22,7 +22,7 @@ class SoccerNetGS(_BaseDataset):
             'EVAL_MODE': 'distance',  # Valid: 'distance' or 'classes': both are equivalent, classes is much slower.
             'EVAL_SPACE': 'pitch',  # Valid: 'image', 'pitch'
             'EVAL_SIMILARITY_METRIC': 'gaussian',  # Valid: 'iou', 'eucl', 'gaussian'
-            'EVAL_SIGMA': 2.5,  # Sigma parameter for the gaussian similarity metric.
+            'EVAL_DIST_TOL': 6,  # Distance tolerance for matching predictions P and ground truth G, in meters. P and G with a larger distance will never be considered as matched when computing the HOTA.
             'USE_ROLES': True,  # Take role into account for evaluation
             'USE_TEAMS': True,  # Take team into account for evaluation
             'USE_JERSEY_NUMBERS': True,  # Take jersey numbers into account for evaluation
@@ -71,7 +71,8 @@ class SoccerNetGS(_BaseDataset):
         self.eval_mode = self.config['EVAL_MODE']
         self.eval_space = self.config['EVAL_SPACE']
         self.eval_sim_metric = self.config['EVAL_SIMILARITY_METRIC']
-        self.eval_sigma = self.config['EVAL_SIGMA']
+        self.eval_sigma = calculate_sigma(self.config['EVAL_DIST_TOL'])
+        print(f"Using a sigma of {self.eval_sigma} for the gaussian similarity metric, based on a distance tolerance of {self.config['EVAL_DIST_TOL']} meters.")
         self.ignore_ball = self.config['IGNORE_BALL']
         self.use_jersey_numbers = self.config['USE_JERSEY_NUMBERS']
         self.use_teams = self.config['USE_TEAMS']
@@ -610,3 +611,11 @@ def bbox_image_bottom_projection_to_bbox_pitch(dets):
     transformed_dets = np.stack((x_bottom_middle, y_bottom_middle, bbox_width_height, bbox_width_height), axis=-1)
 
     return transformed_dets
+
+
+def calculate_sigma(x):
+    """Compute gaussian kernel sigma value based on the following assumption:
+    The input x value in meters should produce a similarity of 0.05.
+    0.05 is the minimum acceptable similarity threshold for groundtruth/prediction matching in the HOTA metric."""
+    sigma = np.sqrt(x**2 / (-2 * np.log(0.05)))
+    return sigma
