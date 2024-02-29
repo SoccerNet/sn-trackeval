@@ -22,7 +22,7 @@ class SoccerNetGS(_BaseDataset):
             'EVAL_MODE': 'distance',  # Valid: 'distance' or 'classes': both are equivalent, classes is much slower.
             'EVAL_SPACE': 'pitch',  # Valid: 'image', 'pitch'
             'EVAL_SIMILARITY_METRIC': 'gaussian',  # Valid: 'iou', 'eucl', 'gaussian'
-            'EVAL_DIST_TOL': 6,  # Distance tolerance for matching predictions P and ground truth G, in meters. P and G with a larger distance will never be considered as matched when computing the HOTA.
+            'EVAL_DIST_TOL': 5,  # Distance tolerance for matching predictions P and ground truth G, in meters. P and G with a larger distance will never be considered as matched when computing the HOTA.
             'USE_ROLES': True,  # Take role into account for evaluation
             'USE_TEAMS': True,  # Take team into account for evaluation
             'USE_JERSEY_NUMBERS': True,  # Take jersey numbers into account for evaluation
