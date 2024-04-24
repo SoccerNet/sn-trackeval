@@ -1,6 +1,6 @@
 # SoccerNet TrackEval
 
-*Fork of the [TrackEval library](https://github.com/JonathonLuiten/TrackEval) to support specific SoccerNet tasks and evaluation metrics, such as [SoccerNet MOT](https://github.com/SoccerNet/sn-tracking) and [SoccerNet Game State Recognition](https://github.com/SoccerNet/sn-gamestate).*
+*Fork of the [TrackEval library](https://github.com/JonathonLuiten/TrackEval) to support specific SoccerNet tasks and evaluation metrics, such as [SoccerNet MOT](https://github.com/SoccerNet/sn-tracking) and [SoccerNet Game State Reconstruction](https://github.com/SoccerNet/sn-gamestate).*
 
 This codebase provides code for a number of different tracking evaluation metrics (including the [HOTA metrics](https://link.springer.com/article/10.1007/s11263-020-01375-2)), as well as supporting running all of these metrics on a number of different tracking benchmarks. Plus plotting of results and other things one may want to do for tracking evaluation.
 

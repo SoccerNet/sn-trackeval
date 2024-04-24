@@ -47,7 +47,7 @@ class SoccerNetGS(_BaseDataset):
         """Initialise dataset, checking that all required files are present"""
         super().__init__()
 
-        print("Initializing the dataset class for the SoccerNet Game State Recognition task.\n"
+        print("Initializing the dataset class for the SoccerNet Game State Reconstruction task.\n"
               "IMPORTANT: The official evaluation metric for the task, i.e. the 'GS-HOTA' will appear under the 'HOTA' name in the evaluation script output.\n"
               "This happen because GS-HOTA mainly uses the same logic as the HOTA metric, the HOTA evaluation class is therefore not forked but re-used.\n"
               "The key practical difference between the GS-HOTA and the HOTA is actually the similarity metric used to match predictions with ground truth."
