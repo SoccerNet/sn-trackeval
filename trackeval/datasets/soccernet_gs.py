@@ -59,9 +59,10 @@ class SoccerNetGS(_BaseDataset):
         self.config = utils.init_config(config, self.get_default_dataset_config(), self.get_name())
 
         self.benchmark = 'SoccerNetGS'
+        self.split = self.config['SPLIT_TO_EVAL']
         if not self.config['SKIP_SPLIT_FOL']:
-            gt_split_fol = self.config['SPLIT_TO_EVAL']
-            track_split_fol = self.benchmark + '-' + self.config['SPLIT_TO_EVAL']
+            gt_split_fol = self.split
+            track_split_fol = self.benchmark + '-' + self.split
         else:
             gt_split_fol = ''
             track_split_fol = ''
@@ -230,7 +231,14 @@ class SoccerNetGS(_BaseDataset):
                 continue
             image_id = annotation["image_id"]
             if image_id not in self.image_id_to_timestep:
-                continue
+                split_id = ["train", "valid", "test", "challenge"].index(self.split) + 1
+                seq_id = seq.split("-")[-1]
+                frame_id = int(image_id[-4:]) + 1
+                new_image_id = f"{split_id}{seq_id}{frame_id:06d}"
+                if new_image_id in self.image_id_to_timestep and not is_gt:
+                    image_id = new_image_id
+                else:
+                    continue
             if self.ignore_ball and annotation["attributes"]["role"] == "ball":
                 continue
             timestep = self.image_id_to_timestep[image_id]
