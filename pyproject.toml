@@ -1,6 +1,6 @@
 [project]
 name = "sn-trackeval"
-version = "0.1.0"
+version = "0.2.0"
 authors = [
     {name = "Vladimir Somers", email = "somers.vladimir@gmail.com"},
     {name = "Jonathon Luiten", email = "jonoluiten@gmail.com"},
@@ -32,8 +32,8 @@ dependencies = [
     "tabulate",
 ]
 
-[tool.setuptools]
-packages = ["trackeval"]
+[tool.setuptools.packages.find]
+include = ["trackeval*"]
 
 [build-system]
 requires = [
