@@ -231,11 +231,13 @@ class SoccerNetGS(_BaseDataset):
                 continue
             image_id = annotation["image_id"]
             if image_id not in self.image_id_to_timestep:
+                if is_gt or len(image_id) == 10:
+                    continue
                 split_id = ["train", "valid", "test", "challenge"].index(self.split) + 1
                 seq_id = seq.split("-")[-1]
                 frame_id = int(image_id[-4:]) + 1
                 new_image_id = f"{split_id}{seq_id}{frame_id:06d}"
-                if new_image_id in self.image_id_to_timestep and not is_gt:
+                if new_image_id in self.image_id_to_timestep:
                     image_id = new_image_id
                 else:
                     continue
