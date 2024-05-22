@@ -1,10 +1,10 @@
 [project]
 name = "sn-trackeval"
-version = "0.2.0"
+version = "0.2.1"
 authors = [
     {name = "Vladimir Somers", email = "somers.vladimir@gmail.com"},
     {name = "Jonathon Luiten", email = "jonoluiten@gmail.com"},
-    {name = "Arne Hoffhues"},
+    {name = "Arne Hoffhues", email = "no-email@example.com"},
     {name = "Victor Joos", email = "victorjoosdtb@gmail.com"},
 ]
 description = "Code for evaluating object tracking"
