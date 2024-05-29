@@ -4,9 +4,23 @@
 
 This codebase provides code for a number of different tracking evaluation metrics (including the [HOTA metrics](https://link.springer.com/article/10.1007/s11263-020-01375-2)), as well as supporting running all of these metrics on a number of different tracking benchmarks. Plus plotting of results and other things one may want to do for tracking evaluation.
 
-## **NEW**: RobMOTS Challenge 2021
+To perform evaluation for SoccerNet Game State Reconstruction, please run the following command:
+```
+python3 ./scripts/run_soccernet_gs.py --GT_FOLDER path/to/dataset/SoccerNetGS --TRACKERS_FOLDER path/to/predictions_folder --TRACKER_SUB_FOLDER "" --SPLIT_TO_EVAL "test"
+```
+Where `path/to/dataset/SoccerNetGS` points to the dataset folder to be downloaded on the [sn-gamestate repository](https://github.com/SoccerNet/sn-gamestate), and `path/to/predictions_folder` points to a folder containing another folder with your predictions json files. This prediction folder should be named `SoccerNetGS-test` or `SoccerNetGS-valid`, where the suffix match the `SPLIT_TO_EVAL` config. The subfolder is the name of your tracker, it could be anything. Here is how the predictions folder should look like:
 
-Call for submission to our [RobMOTS Challenge](https://eval.vision.rwth-aachen.de/rvsu-workshop21/?page_id=110) (Robust Multi-Object Tracking and Segmentation) held in conjunction with our [RVSU CVPR'21 Workshop](https://eval.vision.rwth-aachen.de/rvsu-workshop21/). Robust tracking evaluation against 8 tracking benchmarks. Challenge submission deadline June 15th. Also check out our workshop [call for papers](https://eval.vision.rwth-aachen.de/rvsu-workshop21/?page_id=74).
+```
+SoccerNetGS-test
+└── tracklab  # use any name
+    ├── SNGS-116.json
+    ├── SNGS-117.json
+    ├── SNGS-118.json
+    ...
+    ├── SNGS-199.json
+    └── SNGS-200.json
+```
+
 
 ## Official Evaluation Code
 
