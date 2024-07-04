@@ -280,7 +280,7 @@ class SoccerNetGS(_BaseDataset):
             # if role are disabled, use team without preprocessing. Team should be set to "None" (null in the json) if the detection is not a player nor a goalkeeper
             team = team if (self.use_teams and self.use_roles and role in {"player", "goalkeeper"}) or (self.use_teams and not self.use_roles) else None
             # if role are disabled, use jersey number without preprocessing. Jersey Numbers should be set to "None" (null in the json) if the detection is not a player nor a goalkeeper
-            jersey_number = jersey_number if (self.use_jersey_numbers and self.use_roles and role in {"player", "goalkeeper"}) or (self.use_jersey_numbers and not self.use_roles) else None
+            jersey_number = jersey_number if (self.use_jersey_numbers and self.use_roles and role in {"player"}) or (self.use_jersey_numbers and not self.use_roles) else None
             assert role is None or role in {"other", "player", "goalkeeper", "referee"}
             assert team is None or team in {"left", "right", 'nan'}
             assert jersey_number is None or 0 <= int(jersey_number) <= 10000
