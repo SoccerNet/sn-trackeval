@@ -12,3 +12,6 @@ data
 **/__pycache__
 error_log.txt
 build/
+dist/
+*.egg-info/
+*.egg
