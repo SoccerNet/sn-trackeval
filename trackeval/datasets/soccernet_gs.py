@@ -421,6 +421,7 @@ class SoccerNetGS(_BaseDataset):
         data['num_tracker_ids'] = len(unique_tracker_ids)
         data['num_gt_ids'] = len(unique_gt_ids)
         data['num_timesteps'] = raw_data['num_timesteps']
+        data['seq'] = raw_data['seq']
 
         # Ensure that ids are unique per timestep.
         self._check_unique_ids(data)
